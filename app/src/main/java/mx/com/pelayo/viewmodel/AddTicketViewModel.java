@@ -5,6 +5,9 @@ import android.arch.lifecycle.MutableLiveData;
 import android.arch.lifecycle.Transformations;
 import android.arch.lifecycle.ViewModel;
 
+import com.google.gson.Gson;
+
+import java.io.File;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 
@@ -20,6 +23,9 @@ import mx.com.pelayo.database.entities.custom.TicketResponse;
 import mx.com.pelayo.database.entities.custom.UserInformation;
 import mx.com.pelayo.repository.SecurityRepository;
 import mx.com.pelayo.repository.TicketAddRepository;
+import okhttp3.MediaType;
+import okhttp3.MultipartBody;
+import okhttp3.RequestBody;
 import retrofit2.Response;
 
 @Singleton
@@ -141,8 +147,19 @@ public class AddTicketViewModel extends ViewModel {
         return securityRepository.getUsuarioInfo();
     }
 
-    public Observable<Response<TicketResponse>> insertTicket(TicketInsert ticketInsert) {
-        return tdeService.insertTicket(ticketInsert);
+    public Observable<Response<TicketResponse>> insertTicket(File file, TicketInsert ticketInsert) {
+
+        if (file != null) {
+
+            return tdeService.insertFile(MultipartBody.Part.createFormData("file", file.getName(), RequestBody.create(MediaType.parse("multipart/form-data"), file)))
+                    .flatMap(ticketFileResponse -> {
+                        ticketInsert.setArchivo(ticketFileResponse == null ? null : ticketFileResponse.body().getFilePath());
+                        return tdeService.insertTicket(ticketInsert);
+                    });
+        } else {
+            return tdeService.insertTicket(ticketInsert);
+        }
+
     }
 
     public Integer getTypeSymptomId(Integer typeId, Integer symptomId) {

@@ -8,6 +8,7 @@ import java.util.Date;
 public class TicketInsert {
 
     private String observaciones;
+    private String archivo;
     @SerializedName("solucion-remota")
     private boolean solucionRemota;
     @SerializedName("fecha-apertura")
@@ -218,5 +219,13 @@ public class TicketInsert {
 
     public void setUsuario(String usuario) {
         this.usuario = usuario;
+    }
+
+    public String getArchivo() {
+        return archivo;
+    }
+
+    public void setArchivo(String archivo) {
+        this.archivo = archivo;
     }
 }

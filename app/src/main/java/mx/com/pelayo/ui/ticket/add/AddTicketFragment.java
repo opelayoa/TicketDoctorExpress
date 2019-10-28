@@ -29,6 +29,13 @@ import android.widget.Toast;
 
 import com.google.common.collect.Iterables;
 
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.Date;
 
 import javax.inject.Inject;
@@ -88,6 +95,7 @@ public class AddTicketFragment extends Fragment {
     private ImageView image;
     private TextView emptyImage;
     private Button buttonCamera;
+    private File file;
 
     private int typeId;
     private int symptomId;
@@ -488,10 +496,43 @@ public class AddTicketFragment extends Fragment {
         Log.i("XxX", "requestCode: " + requestCode + " CAMERA_REQUEST: " + CAMERA_REQUEST + " resultCode: " + resultCode + " Activity.RESULT_OK" + Activity.RESULT_OK);
         if (requestCode == CAMERA_REQUEST && resultCode == Activity.RESULT_OK) {
             Bitmap photo = (Bitmap) data.getExtras().get("data");
-            image.setImageBitmap(photo);
-            image.setVisibility(View.VISIBLE);
-            emptyImage.setVisibility(View.GONE);
+
+            try {
+                file = bitmapToFile(photo);
+                image.setImageBitmap(photo);
+                image.setVisibility(View.VISIBLE);
+                emptyImage.setVisibility(View.GONE);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        } else {
+            file = null;
+            image.setVisibility(View.GONE);
+            emptyImage.setVisibility(View.VISIBLE);
         }
+    }
+
+    private File bitmapToFile(Bitmap bitmap) throws IOException {
+
+        DateFormat dateFormat = new SimpleDateFormat("hhmmssSSS");
+        String fileName = dateFormat.format(new Date());
+        fileName = "TDE-" + fileName + ".png";
+        //create a file to write bitmap data
+        File file = new File(this.getContext().getCacheDir(), fileName);
+        file.createNewFile();
+
+        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+        bitmap.compress(Bitmap.CompressFormat.PNG, 0 /*ignored for PNG*/, byteArrayOutputStream);
+        byte[] bitmapdata = byteArrayOutputStream.toByteArray();
+
+//write the bytes in file
+        FileOutputStream fos = new FileOutputStream(file);
+        fos.write(bitmapdata);
+        fos.flush();
+        fos.close();
+
+        return file;
+
     }
 
     private void configRegionStates(View view) {
@@ -586,7 +627,8 @@ public class AddTicketFragment extends Fragment {
             legend = legend.substring(0, 45);
         }
         ticketInsert.setLeyenda(legend);
-        addTicketViewModel.insertTicket(ticketInsert)
+
+        addTicketViewModel.insertTicket(file, ticketInsert)
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribeOn(Schedulers.io())
                 .subscribe(new DisposableObserver<Response<TicketResponse>>() {

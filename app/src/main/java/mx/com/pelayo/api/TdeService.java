@@ -35,9 +35,11 @@ import mx.com.pelayo.database.entities.TipoSucursal;
 import mx.com.pelayo.database.entities.Tipotd;
 import mx.com.pelayo.database.entities.Usuario;
 import mx.com.pelayo.database.entities.Zona;
+import mx.com.pelayo.database.entities.custom.TicketFileResponse;
 import mx.com.pelayo.database.entities.custom.TicketInsert;
 import mx.com.pelayo.database.entities.custom.TicketResponse;
 import okhttp3.MultipartBody;
+import okhttp3.RequestBody;
 import retrofit2.Response;
 import retrofit2.http.Body;
 import retrofit2.http.GET;
@@ -141,7 +143,10 @@ public interface TdeService {
     @GET("tickets/summary/user/{userId}/type/{ticketStateId}")
     Observable<List<TicketSummary>> getTicketsSummary(@Path("userId") Integer userId, @Path("ticketStateId") Integer ticketStateId);
 
-    @Multipart
     @POST("tickets")
-    Observable<Response<TicketResponse>> insertTicket(@Body TicketInsert ticketInsert, @Part MultipartBody.Part part);
+    Observable<Response<TicketResponse>> insertTicket(@Body TicketInsert ticketInsert);
+
+    @Multipart
+    @POST("tickets/files")
+    Observable<Response<TicketFileResponse>> insertFile(@Part MultipartBody.Part file);
 }
